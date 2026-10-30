@@ -1,0 +1,24 @@
+# Workflow — from documents to a reviewed threat model
+
+1. **Scope.** State the system, version/date, what is in and out of scope, and the planning documents or code revision modelled (`meta:` block). Greenfield: the suite at `Pending approval`; brownfield: the commit hash.
+2. **Build the model file** (`templates/model.example.yaml` as the shape): boundaries → elements → flows → assets → assumptions. Run `python3 scripts/build_report.py model.yaml --check` until the DFD validates (no orphans, every flow between known elements, every process/store in a boundary).
+3. **Record divergences as you read**: whenever two sources disagree (document vs document, document vs code — a token lifetime stated twice, a control described in 08 that the configuration does not enforce), add a `divergences` entry with the two locations and a resolution owner; link the threats it causes. An implementer has to pick one reading, so a divergence is a finding, not a note.
+4. **Enumerate threats per element** with `references/stride-per-element.md`: walk the matrix cell by cell; cross-boundary flows and processes first. Import the existing abuse cases (`08 §2.2`) as threats with their ids in `refs`. Each threat cites an element or flow id.
+5. **Rate and dispose** each threat (`references/risk-rating.md`): likelihood, impact, existing controls with citations, mitigation, status, owner. Mark the cells with no threat as `no-threat` with a reason so coverage is explicit. Then write for leadership: `headline` / `plain` / `plain_fix` / `effort` on every open Critical/High and on the top open threats, `meta.summary` (what the posture is and why, in business terms) and `meta.decisions` (approvals and funding asked of leadership, each with owner, date and the threats it resolves).
+6. **Generate** `python3 scripts/build_report.py model.yaml -o threat-model.html` (writes the HTML, the SVG diagrams and `threat-model-summary.md` beside it). Open the HTML and read the coverage matrix and heat map: empty cells are missing work, not good news.
+7. **Review gate.** A second reader checks: every cross-boundary flow has S/T/I/D threats considered; every Critical/High has an owner and a plan row; assumptions are true in `03`/`13`; no mitigation is "will validate input" without the control named.
+8. **File it.** `docs/security/threat-model/` holds `model.yaml`, `threat-model.html`, the SVGs and the summary. Link the summary from `08 §2` (greenfield) or the README security row (brownfield). Open threats become 09 rows or BACKLOG items; `accepted` ones carry the approver. When you may not edit the other documents, write `handoff.md` beside the report: the links to add, the 09 rows or BACKLOG items to create, the divergences to resolve, each with an owner.
+9. **Keep it alive.** Re-run at every architecture change (new store, new flow across a boundary, new third party) and at each release gate; bump `meta.version`, keep the previous HTML.
+
+## Greenfield versus brownfield
+
+- Greenfield (suite only): the model mirrors `03` and `08 §2.3`; controls cite `08` sections; every open threat maps to a 09 sprint row.
+- Brownfield (code exists): elements come from the deployable units and the module list; controls cite code paths (`app/modules/x/policy.py`); `mitigated` needs the control in design and code; doc-versus-code divergences go in the model's `divergences` list and appear in the report as BACKLOG candidates.
+
+## Report contents (what `build_report.py` emits)
+
+One page, two parts, with an audience switch (Executive brief / Technical detail / Everything) and a print stylesheet.
+
+**Part A — for leadership** (readable in ten minutes, no jargon): executive brief (generated opening sentence plus `meta.summary`) · posture at a glance (stat tiles: identified, need action, controlled, accepted/transferred, coverage; thin bars by severity and status) · top risks (open threats ranked by score, each headed by `headline`, with *what could happen* and *what we recommend* from `plain`/`plain_fix`, owner, when, effort) · decisions needed (`meta.decisions`, or derived from the register when absent) · who owns what (open / high-priority / mitigated per owner, next action) · how to read this report (STRIDE in plain words, scoring, statuses, terms).
+
+**Part B — for engineering**: scope and assumptions · DFD L0 and L1 as inline SVG with legend, zoom, full screen and the SVG file · boundaries and components · data flows (cross-boundary filter) · assets · threat register (search, category/severity/status/owner filters, sortable, each row expands to description, controls, mitigation, plan, references; deep links `#T-n`) · STRIDE coverage matrix (counts link to the register; no-threat reasons on hover; gaps in red) · 5×5 heat map with scale anchors (click a cell to filter the register) · mitigation plan by status · divergences · method and metadata.

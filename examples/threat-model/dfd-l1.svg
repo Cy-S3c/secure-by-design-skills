@@ -1,0 +1,146 @@
+<svg width="1283pt" height="214pt"
+ viewBox="0.00 0.00 1282.99 214.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="l1-graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 210)">
+<title>L1</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-210 1278.99,-210 1278.99,4 -4,4"/>
+<g id="l1-clust1" class="cluster">
+<title>cluster_B_1</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M12,-101C12,-101 146,-101 146,-101 152,-101 158,-107 158,-113 158,-113 158,-172 158,-172 158,-178 152,-184 146,-184 146,-184 12,-184 12,-184 6,-184 0,-178 0,-172 0,-172 0,-113 0,-113 0,-107 6,-101 12,-101"/>
+<text text-anchor="middle" x="79" y="-168.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Public network (B&#45;1)</text>
+</g>
+<g id="l1-clust2" class="cluster">
+<title>cluster_B_2</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M235,-92C235,-92 395.29,-92 395.29,-92 401.29,-92 407.29,-98 407.29,-104 407.29,-104 407.29,-181 407.29,-181 407.29,-187 401.29,-193 395.29,-193 395.29,-193 235,-193 235,-193 229,-193 223,-187 223,-181 223,-181 223,-104 223,-104 223,-98 229,-92 235,-92"/>
+<text text-anchor="middle" x="315.15" y="-177.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Ingress / DMZ (B&#45;2)</text>
+</g>
+<g id="l1-clust3" class="cluster">
+<title>cluster_B_3</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M484.29,-99C484.29,-99 1054.99,-99 1054.99,-99 1060.99,-99 1066.99,-105 1066.99,-111 1066.99,-111 1066.99,-186 1066.99,-186 1066.99,-192 1060.99,-198 1054.99,-198 1054.99,-198 484.29,-198 484.29,-198 478.29,-198 472.29,-192 472.29,-186 472.29,-186 472.29,-111 472.29,-111 472.29,-105 478.29,-99 484.29,-99"/>
+<text text-anchor="middle" x="769.64" y="-182.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Application network (B&#45;3)</text>
+</g>
+<g id="l1-clust4" class="cluster">
+<title>cluster_B_4</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M694.41,-8C694.41,-8 819.41,-8 819.41,-8 825.41,-8 831.41,-14 831.41,-20 831.41,-20 831.41,-79 831.41,-79 831.41,-85 825.41,-91 819.41,-91 819.41,-91 694.41,-91 694.41,-91 688.41,-91 682.41,-85 682.41,-79 682.41,-79 682.41,-20 682.41,-20 682.41,-14 688.41,-8 694.41,-8"/>
+<text text-anchor="middle" x="756.91" y="-75.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Data network (B&#45;4)</text>
+</g>
+<g id="l1-clust5" class="cluster">
+<title>cluster_B_5</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M1143.99,-111C1143.99,-111 1262.99,-111 1262.99,-111 1268.99,-111 1274.99,-117 1274.99,-123 1274.99,-123 1274.99,-174 1274.99,-174 1274.99,-180 1268.99,-186 1262.99,-186 1262.99,-186 1143.99,-186 1143.99,-186 1137.99,-186 1131.99,-180 1131.99,-174 1131.99,-174 1131.99,-123 1131.99,-123 1131.99,-117 1137.99,-111 1143.99,-111"/>
+<text text-anchor="middle" x="1203.49" y="-170.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Third parties (B&#45;5)</text>
+</g>
+<!-- E&#45;1 -->
+<g id="l1-node1" class="node">
+<title>E&#45;1</title>
+<polygon fill="#e7f0fb" stroke="black" points="114,-153 44,-153 44,-109 114,-109 114,-153"/>
+<text text-anchor="middle" x="79" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">E&#45;1</text>
+<text text-anchor="middle" x="79" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">Staff user</text>
+<text text-anchor="middle" x="79" y="-116.2" font-family="Helvetica,sans-Serif" font-size="11.00">(browser)</text>
+</g>
+<!-- P&#45;1 -->
+<g id="l1-node2" class="node">
+<title>P&#45;1</title>
+<ellipse fill="#eaf6ea" stroke="black" cx="315.15" cy="-131" rx="84.29" ry="31.23"/>
+<text text-anchor="middle" x="315.15" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">P&#45;1</text>
+<text text-anchor="middle" x="315.15" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">Ingress (TLS, WAF,</text>
+<text text-anchor="middle" x="315.15" y="-116.2" font-family="Helvetica,sans-Serif" font-size="11.00">rate limits)</text>
+</g>
+<!-- E&#45;1&#45;&gt;P&#45;1 -->
+<g id="l1-edge1" class="edge">
+<title>E&#45;1&#45;&gt;P&#45;1</title>
+<g id="l1-a_edge1"><a xlink:title="HTTPS requests">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M114.05,-131C141.93,-131 182.76,-131 220.27,-131"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="220.75,-134.5 230.75,-131 220.75,-127.5 220.75,-134.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="190.5" y="-133.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;1</text>
+</g>
+<!-- P&#45;2 -->
+<g id="l1-node3" class="node">
+<title>P&#45;2</title>
+<ellipse fill="#eaf6ea" stroke="black" cx="541.1" cy="-131" rx="60.62" ry="22.76"/>
+<text text-anchor="middle" x="541.1" y="-134.2" font-family="Helvetica,sans-Serif" font-size="11.00">P&#45;2</text>
+<text text-anchor="middle" x="541.1" y="-122.2" font-family="Helvetica,sans-Serif" font-size="11.00">API (FastAPI)</text>
+</g>
+<!-- P&#45;1&#45;&gt;P&#45;2 -->
+<g id="l1-edge2" class="edge">
+<title>P&#45;1&#45;&gt;P&#45;2</title>
+<g id="l1-a_edge2"><a xlink:title="Proxied requests">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M399.54,-131C422.73,-131 447.67,-131 470.01,-131"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="470.07,-134.5 480.07,-131 470.07,-127.5 470.07,-134.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="439.79" y="-133.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;2</text>
+</g>
+<!-- D&#45;2 -->
+<g id="l1-node5" class="node">
+<title>D&#45;2</title>
+<path fill="#fff4e0" stroke="black" d="M803.91,-161.96C803.91,-165.02 782.62,-167.5 756.41,-167.5 730.2,-167.5 708.91,-165.02 708.91,-161.96 708.91,-161.96 708.91,-112.04 708.91,-112.04 708.91,-108.98 730.2,-106.5 756.41,-106.5 782.62,-106.5 803.91,-108.98 803.91,-112.04 803.91,-112.04 803.91,-161.96 803.91,-161.96"/>
+<path fill="none" stroke="black" d="M803.91,-161.96C803.91,-158.9 782.62,-156.41 756.41,-156.41 730.2,-156.41 708.91,-158.9 708.91,-161.96"/>
+<text text-anchor="middle" x="756.41" y="-146.2" font-family="Helvetica,sans-Serif" font-size="11.00">D&#45;2</text>
+<text text-anchor="middle" x="756.41" y="-134.2" font-family="Helvetica,sans-Serif" font-size="11.00">Redis (tokens,</text>
+<text text-anchor="middle" x="756.41" y="-122.2" font-family="Helvetica,sans-Serif" font-size="11.00">queue)</text>
+</g>
+<!-- P&#45;2&#45;&gt;D&#45;2 -->
+<g id="l1-edge4" class="edge">
+<title>P&#45;2&#45;&gt;D&#45;2</title>
+<g id="l1-a_edge4"><a xlink:title="Token and job writes">
+<path fill="none" stroke="#444444" d="M601.81,-132.68C632.01,-133.53 668.5,-134.56 698.34,-135.39"/>
+<polygon fill="#444444" stroke="#444444" points="698.49,-138.9 708.59,-135.68 698.69,-131.9 698.49,-138.9"/>
+</a>
+</g>
+<text text-anchor="middle" x="642.41" y="-136.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#444444">F&#45;4</text>
+</g>
+<!-- D&#45;1 -->
+<g id="l1-node6" class="node">
+<title>D&#45;1</title>
+<path fill="#fff4e0" stroke="black" d="M796.41,-56C796.41,-58.21 778.49,-60 756.41,-60 734.34,-60 716.41,-58.21 716.41,-56 716.41,-56 716.41,-20 716.41,-20 716.41,-17.79 734.34,-16 756.41,-16 778.49,-16 796.41,-17.79 796.41,-20 796.41,-20 796.41,-56 796.41,-56"/>
+<path fill="none" stroke="black" d="M796.41,-56C796.41,-53.79 778.49,-52 756.41,-52 734.34,-52 716.41,-53.79 716.41,-56"/>
+<text text-anchor="middle" x="756.41" y="-41.2" font-family="Helvetica,sans-Serif" font-size="11.00">D&#45;1</text>
+<text text-anchor="middle" x="756.41" y="-29.2" font-family="Helvetica,sans-Serif" font-size="11.00">PostgreSQL</text>
+</g>
+<!-- P&#45;2&#45;&gt;D&#45;1 -->
+<g id="l1-edge3" class="edge">
+<title>P&#45;2&#45;&gt;D&#45;1</title>
+<g id="l1-a_edge3"><a xlink:title="SQL">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M581.23,-113.94C616.6,-98.52 668.8,-75.76 706.83,-59.18"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="708.41,-62.31 716.18,-55.11 705.61,-55.89 708.41,-62.31"/>
+</a>
+</g>
+<text text-anchor="middle" x="642.41" y="-92.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;3</text>
+</g>
+<!-- P&#45;3 -->
+<g id="l1-node4" class="node">
+<title>P&#45;3</title>
+<ellipse fill="#eaf6ea" stroke="black" cx="985.45" cy="-137" rx="73.58" ry="22.76"/>
+<text text-anchor="middle" x="985.45" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">P&#45;3</text>
+<text text-anchor="middle" x="985.45" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">Worker (Celery)</text>
+</g>
+<!-- E&#45;2 -->
+<g id="l1-node7" class="node">
+<title>E&#45;2</title>
+<polygon fill="#e7f0fb" stroke="black" points="1241.99,-155 1163.99,-155 1163.99,-119 1241.99,-119 1241.99,-155"/>
+<text text-anchor="middle" x="1202.99" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">E&#45;2</text>
+<text text-anchor="middle" x="1202.99" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">SMTP relay</text>
+</g>
+<!-- P&#45;3&#45;&gt;E&#45;2 -->
+<g id="l1-edge6" class="edge">
+<title>P&#45;3&#45;&gt;E&#45;2</title>
+<g id="l1-a_edge6"><a xlink:title="Transactional email">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M1059.12,-137C1090.23,-137 1125.71,-137 1153.53,-137"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="1153.79,-140.5 1163.79,-137 1153.79,-133.5 1153.79,-140.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="1099.49" y="-139.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;6</text>
+</g>
+<!-- D&#45;2&#45;&gt;P&#45;3 -->
+<g id="l1-edge5" class="edge">
+<title>D&#45;2&#45;&gt;P&#45;3</title>
+<g id="l1-a_edge5"><a xlink:title="Job dequeue">
+<path fill="none" stroke="#444444" d="M804.18,-137C832.3,-137 868.89,-137 901.75,-137"/>
+<polygon fill="#444444" stroke="#444444" points="901.81,-140.5 911.81,-137 901.81,-133.5 901.81,-140.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="871.41" y="-139.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#444444">F&#45;5</text>
+</g>
+</g>
+</svg>

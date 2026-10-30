@@ -1,0 +1,23 @@
+{
+  "name": "secure-by-design-skills",
+  "version": "1.1.1",
+  "description": "Plan a software product as an approvable documentation suite, then threat-model it with STRIDE per element: data-flow diagrams with trust boundaries, a rated and owned threat register, and a two-audience HTML report.",
+  "author": {
+    "name": "Cy-S3c",
+    "url": "https://github.com/Cy-S3c"
+  },
+  "homepage": "https://github.com/Cy-S3c/secure-by-design-skills",
+  "repository": "https://github.com/Cy-S3c/secure-by-design-skills",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "agent-skills",
+    "product-documentation",
+    "prd",
+    "architecture",
+    "threat-modeling",
+    "stride",
+    "data-flow-diagram",
+    "secure-by-design"
+  ]
+}

@@ -1,0 +1,62 @@
+name: Validate skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Scripts, front matter and example output
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Graphviz and PyYAML
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q graphviz
+          python -m pip install --quiet pyyaml
+
+      - name: Skill front matter is present
+        run: |
+          for f in skills/*/SKILL.md; do
+            head -n1 "$f" | grep -qx -- '---' || { echo "$f: missing front matter"; exit 1; }
+            grep -q '^name: ' "$f"        || { echo "$f: missing name"; exit 1; }
+            grep -q '^description: ' "$f" || { echo "$f: missing description"; exit 1; }
+            grep -q '^  version: ' "$f"   || { echo "$f: missing metadata.version"; exit 1; }
+            echo "ok  $f"
+          done
+
+      - name: Documentation suite audit script runs
+        run: |
+          python3 skills/product-documentation-suite/scripts/audit_suite.py --help > /dev/null
+          mkdir -p "$RUNNER_TEMP/empty-docs"
+          python3 skills/product-documentation-suite/scripts/audit_suite.py "$RUNNER_TEMP/empty-docs" --profile minimal --allow-missing
+
+      - name: Threat model example validates and builds
+        run: |
+          python3 skills/threat-modeling-stride/scripts/build_report.py skills/threat-modeling-stride/templates/model.example.yaml --check
+          mkdir -p "$RUNNER_TEMP/tm"
+          cp skills/threat-modeling-stride/templates/model.example.yaml "$RUNNER_TEMP/tm/model.yaml"
+          python3 skills/threat-modeling-stride/scripts/build_report.py "$RUNNER_TEMP/tm/model.yaml"
+          test -s "$RUNNER_TEMP/tm/threat-model.html"
+          test -s "$RUNNER_TEMP/tm/dfd-l0.svg"
+          test -s "$RUNNER_TEMP/tm/dfd-l1.svg"
+          grep -q '<svg' "$RUNNER_TEMP/tm/threat-model.html"
+
+      - name: Committed example is current
+        run: |
+          cmp skills/threat-modeling-stride/templates/model.example.yaml examples/threat-model/model.yaml \
+            || { echo "examples/threat-model/model.yaml differs from the template"; exit 1; }
+          cmp "$RUNNER_TEMP/tm/threat-model-summary.md" examples/threat-model/threat-model-summary.md \
+            || { echo "examples/threat-model/threat-model-summary.md is stale: rebuild it (see CONTRIBUTING.md)"; exit 1; }

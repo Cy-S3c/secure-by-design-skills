@@ -1,0 +1,500 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Threat model — Acme Scheduler</title><style>/* Threat-model report stylesheet — inlined into threat-model.html by build_report.py.
+   Tokens follow the dataviz reference palette: status colours for severity, neutral ink, hairline chrome. */
+:root{color-scheme:light;--bg:#f5f5f2;--surface:#fcfcfb;--surface-2:#f0efea;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#77766f;--line:#e1e0d9;--line-2:#c3c2b7;--accent:#2a78d6;--accent-ink:#1c5cab;
+--c-crit:#d03b3b;--c-high:#ec835a;--c-med:#fab219;--c-low:#0ca30c;--c-open:#6f6e69;--c-mitigated:#0ca30c;--c-accepted:#6250d6;--c-transferred:#2a78d6;
+--crit-bg:#f9e0e0;--crit-ink:#8a1f1f;--high-bg:#fde6db;--high-ink:#8a3812;--med-bg:#fff0c4;--med-ink:#6b4e00;--low-bg:#dff3df;--low-ink:#0f5f0f;
+--open-bg:#ebe9e3;--open-ink:#3b3a37;--mit-bg:#dff3df;--mit-ink:#0f5f0f;--acc-bg:#ebe8fb;--acc-ink:#3d2fa0;--tra-bg:#dce9fa;--tra-ink:#174a8a;
+--heat-c:#f3c4c4;--heat-h:#f8d8c8;--heat-m:#fbe9b6;--heat-l:#d4eed4;--gap-bg:#f9e0e0;--gap-ink:#8a1f1f;
+--shadow:0 1px 2px rgba(11,11,11,.06),0 1px 1px rgba(11,11,11,.04);--radius:10px}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0d0d0d;--surface:#1a1a19;--surface-2:#242422;--ink:#f0efec;--ink-2:#c3c2b7;--ink-3:#9c9b94;--line:#2c2c2a;--line-2:#3a3a37;--accent:#3987e5;--accent-ink:#86b6ef;--c-open:#9c9b94;--c-accepted:#9085e9;--c-transferred:#3987e5;
+--crit-bg:#4a1d1d;--crit-ink:#f5b5b5;--high-bg:#4a2a1c;--high-ink:#f6c3ae;--med-bg:#3f3310;--med-ink:#f6d78a;--low-bg:#163a16;--low-ink:#a9e3a9;--open-bg:#2c2c2a;--open-ink:#e6e4de;--mit-bg:#163a16;--mit-ink:#a9e3a9;--acc-bg:#272250;--acc-ink:#c9c2f4;--tra-bg:#172a45;--tra-ink:#b7d3f6;
+--heat-c:#5a2323;--heat-h:#58311f;--heat-m:#524012;--heat-l:#1e4a1e;--gap-bg:#4a1d1d;--gap-ink:#f5b5b5;--shadow:none}}
+
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+a{color:var(--accent-ink)}b,strong{font-weight:650}
+.skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 12px;border:1px solid var(--line-2);border-radius:6px;z-index:100}.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.muted{color:var(--ink-3)}.eyebrow{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+.topbar-in{padding:9px 16px;display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap}
+.brand{min-width:0;flex:1 1 220px}.brand-name{margin:0;font-size:16px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-meta{font-size:13px;color:var(--ink-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.switch{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;padding:2px;background:var(--surface-2)}
+.switch button{border:0;background:transparent;color:var(--ink-2);padding:5px 12px;border-radius:999px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.switch button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.btn{border:1px solid var(--line-2);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;line-height:1.3;display:inline-block}
+.btn:hover{background:var(--surface-2)}.btn-sm{padding:3px 9px;font-size:12px}
+
+/* layout */
+.layout{padding:0 16px 80px;display:grid;grid-template-columns:minmax(0,1fr);gap:0 32px}
+main{min-width:0}
+.toc{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:thin}
+.toc-group{display:none}
+.toc a{flex:none;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;color:var(--ink-2);text-decoration:none;white-space:nowrap}
+.toc a.active{border-color:var(--accent);color:var(--ink);font-weight:600}
+@media (min-width:1024px){
+.layout{grid-template-columns:232px minmax(0,1fr);padding:0 28px 80px}
+.topbar-in{padding:9px 28px}
+.toc{display:block;position:sticky;top:66px;align-self:start;max-height:calc(100vh - 80px);overflow:auto;padding:28px 0 16px}
+.toc-group{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700;margin:16px 0 6px}
+.toc a{display:block;border:0;border-left:2px solid transparent;border-radius:0 6px 6px 0;padding:4px 10px;font-size:13.5px;white-space:normal}
+.toc a:hover{background:var(--surface-2)}.toc a.active{border-left-color:var(--accent);background:var(--surface-2)}}
+
+/* report head, parts, sections */
+.report-head{padding:28px 0 6px}
+.report-head h1{font-size:30px;margin:4px 0 12px;line-height:1.2;letter-spacing:-.01em}
+.meta-strip{display:flex;flex-wrap:wrap;gap:8px 28px;margin:0;font-size:13.5px}
+.meta-strip div{min-width:0;max-width:100%}.meta-strip dt{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:700}
+.meta-strip dd{margin:0;max-width:56ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.part-head{margin:40px 0 6px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+.part-head .eyebrow{color:var(--accent-ink)}.part-head h2{margin:2px 0 0;font-size:24px;line-height:1.2}
+.part-head p{margin:8px 0 0;color:var(--ink-2);max-width:76ch}
+.sec{margin:30px 0}
+.sec h3{font-size:19px;margin:0 0 4px;display:flex;align-items:baseline;gap:10px;line-height:1.3}
+.sec h3 .num{color:var(--ink-3);font-weight:600;font-size:14px;min-width:2ch;font-variant-numeric:tabular-nums}
+.sec .lead{margin:0 0 14px;color:var(--ink-2);max-width:78ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px}
+.card h4{margin:0 0 8px;font-size:14px}.card ul{margin:0;padding-left:18px}.card li{margin:3px 0}
+.card p:first-child{margin-top:0}.card p:last-child{margin-bottom:0}
+.brief p{max-width:90ch;font-size:15.5px}.brief .auto{font-size:16px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:650;line-height:1.6;white-space:nowrap;vertical-align:middle}
+.chip i{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+.chip-crit{background:var(--crit-bg);color:var(--crit-ink)}.chip-crit i{background:var(--c-crit)}
+.chip-high{background:var(--high-bg);color:var(--high-ink)}.chip-high i{background:var(--c-high)}
+.chip-med{background:var(--med-bg);color:var(--med-ink)}.chip-med i{background:var(--c-med)}
+.chip-low{background:var(--low-bg);color:var(--low-ink)}.chip-low i{background:var(--c-low)}
+.chip .sc{font-weight:500;opacity:.85}
+.chip-open{background:var(--open-bg);color:var(--open-ink)}.chip-mitigated{background:var(--mit-bg);color:var(--mit-ink)}
+.chip-accepted{background:var(--acc-bg);color:var(--acc-ink)}.chip-transferred{background:var(--tra-bg);color:var(--tra-ink)}
+.chip-cls{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.cls-confidential{background:var(--med-bg);color:var(--med-ink);border-color:transparent}.cls-restricted{background:var(--crit-bg);color:var(--crit-ink);border-color:transparent}
+.cat{display:inline-block;width:24px;height:24px;line-height:22px;text-align:center;border-radius:6px;background:var(--surface-2);border:1px solid var(--line);font-weight:700;font-size:12.5px;text-decoration:none;cursor:help}
+.kind{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3);font-weight:700}
+.id{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;white-space:nowrap}
+a.tl{text-decoration:none;font-weight:600}a.tl:hover{text-decoration:underline}
+
+/* stat tiles and distribution bars */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:4px 0 14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--line-2);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.tile.tone-act{border-top-color:var(--c-high)}.tile.tone-good{border-top-color:var(--c-low)}.tile.tone-warn{border-top-color:var(--c-med)}.tile.tone-bad{border-top-color:var(--c-crit)}
+.tile-label{display:block;font-size:12.5px;color:var(--ink-2);font-weight:600}
+.tile-value{display:block;font-size:30px;font-weight:700;line-height:1.15;margin:4px 0 2px;letter-spacing:-.01em}
+.tile-sub{display:block;font-size:12.5px;color:var(--ink-3)}
+.bars{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin:0}
+.bar{margin:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow)}
+.bar figcaption{font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:8px}
+.bar-track{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden;background:var(--surface-2)}
+.bar-track div{height:100%;min-width:2px}
+.sw-crit{background:var(--c-crit)}.sw-high{background:var(--c-high)}.sw-med{background:var(--c-med)}.sw-low{background:var(--c-low)}
+.sw-open{background:var(--c-open)}.sw-mitigated{background:var(--c-mitigated)}.sw-accepted{background:var(--c-accepted)}.sw-transferred{background:var(--c-transferred)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:var(--ink-2)}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}.lg b{color:var(--ink)}
+
+/* top-risk cards */
+.risks{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.risk{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+.risk-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rank{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none}
+.risk h4{margin:0;font-size:15.5px;line-height:1.35}
+.risk dl{margin:0;display:grid;gap:7px}.risk dt{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:700}.risk dd{margin:0;font-size:14px}
+.risk footer{margin-top:auto;padding-top:8px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--ink-2)}
+.risk footer b{color:var(--ink-3);font-weight:600}
+
+/* tables */
+.table-wrap{overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+caption{text-align:left;padding:10px 14px 2px;font-weight:600;color:var(--ink-2);font-size:13px}
+th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--surface-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2);font-weight:700;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.sub td{background:var(--surface-2);font-weight:700;color:var(--ink-2);font-size:12.5px;text-transform:uppercase;letter-spacing:.04em}
+td .why{color:var(--ink-2);font-size:13px;margin-top:2px}
+
+#flows td:nth-child(2){min-width:230px}#flows td:nth-child(3){min-width:150px}#flows td:nth-child(5){min-width:200px}#flows td:nth-child(7){min-width:170px}
+#reg td:nth-child(2){min-width:170px}#reg td:nth-child(4){min-width:260px}
+.tech-title{margin:-2px 0 0;font-size:12.5px;color:var(--ink-3)}
+/* register */
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.filters select,.filters input{padding:6px 8px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
+.filters input{min-width:160px;flex:1 1 160px}
+.filters .count{margin-left:auto;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.cell-chip{display:inline-flex;gap:6px;align-items:center;background:var(--tra-bg);color:var(--tra-ink);padding:2px 4px 2px 10px;border-radius:999px;font-size:12.5px;font-weight:600}
+.cell-chip button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:15px;padding:0 6px;line-height:1}
+#reg th[data-sort]{cursor:pointer;user-select:none}#reg th[data-sort]::after{content:" ↕";opacity:.4}
+#reg th[aria-sort="ascending"]::after{content:" ↑";opacity:1}#reg th[aria-sort="descending"]::after{content:" ↓";opacity:1}
+.rowtoggle{border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;padding:0;cursor:pointer;display:flex;gap:8px;align-items:flex-start;font-weight:600;line-height:1.4}
+.rowtoggle::before{content:"▸";color:var(--ink-3);flex:none;transition:transform .15s}.rowtoggle[aria-expanded="true"]::before{transform:rotate(90deg)}
+tr.d td{background:var(--surface-2);padding:12px 16px 14px 40px}
+.detail{display:grid;gap:10px;max-width:96ch}.detail p{margin:0}
+.detail dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:5px 14px}.detail dt{font-weight:700;color:var(--ink-2);font-size:12.5px;padding-top:1px}.detail dd{margin:0}
+.detail ul{margin:0;padding-left:18px}
+tr.flash td{animation:flash 2.2s ease-out}@keyframes flash{0%{background:var(--med-bg)}100%{background:transparent}}
+.target-sub{display:block;color:var(--ink-3);font-size:12px;white-space:normal}
+
+/* coverage matrix */
+.cov td{text-align:center;font-variant-numeric:tabular-nums}.cov td:first-child{text-align:left}
+.cov-na{color:var(--ink-3)}.cov-nt{color:var(--ink-3);font-size:12px;text-decoration:underline dotted;cursor:help}.cov-opt{color:var(--ink-3);font-size:12px;font-style:italic}
+.cov-gap{background:var(--gap-bg);color:var(--gap-ink);font-weight:700}
+.cov-n a{font-weight:700;text-decoration:none}
+.key{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--ink-2);margin:6px 0}
+.key .sw{display:inline-block;width:14px;height:14px;border-radius:3px;margin-right:6px;vertical-align:-2px;border:1px solid var(--line)}
+
+/* heat map */
+.heat{max-width:760px}.heat table{border-collapse:separate;border-spacing:3px;table-layout:fixed}
+.heat th{background:transparent;text-transform:none;letter-spacing:0;font-size:11.5px;white-space:normal;text-align:center;border:0;vertical-align:middle;padding:4px}
+.heat th.y{text-align:right;width:160px}.heat th.corner{text-align:left}
+.heat td{text-align:center;height:58px;border:0;border-radius:8px;font-weight:700;font-size:19px;color:var(--ink);vertical-align:middle;background:var(--surface-2)}
+.heat td[data-n]:not([data-n="0"]){cursor:pointer}.heat td[data-n]:not([data-n="0"]):hover{outline:2px solid var(--accent);outline-offset:-2px}
+.heat td.c{background:var(--heat-c)}.heat td.h{background:var(--heat-h)}.heat td.m{background:var(--heat-m)}.heat td.l{background:var(--heat-l)}
+.heat td[data-n="0"]{color:var(--ink-3);font-weight:500}
+
+/* figures */
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin:10px 0}
+.fig-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--line)}
+.fig-title{font-weight:600;font-size:13.5px;margin-right:auto}
+.fig-tools{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.fig-zoom{font-size:12px;color:var(--ink-3);min-width:36px;text-align:center;font-variant-numeric:tabular-nums}
+.fig-canvas{overflow:auto;background:#fff;padding:12px;max-height:72vh;border-radius:0 0 var(--radius) var(--radius)}
+.fig-canvas svg{display:block;max-width:100%;height:auto}
+.fig:fullscreen{background:var(--surface);padding:16px;overflow:auto}.fig:fullscreen .fig-canvas{max-height:none}
+.dfd-key{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--ink-2);margin:8px 0}
+.dfd-key span::before{content:"";display:inline-block;width:16px;height:11px;margin-right:6px;vertical-align:-1px;border:1px solid #666;border-radius:2px;background:#fff}
+.dfd-key .k-ent::before{background:#e7f0fb}.dfd-key .k-proc::before{background:#eaf6ea;border-radius:50%}.dfd-key .k-store::before{background:#fff4e0;border-radius:3px 3px 7px 7px}
+.dfd-key .k-bnd::before{border:1.5px dashed #b3261e;background:transparent}.dfd-key .k-cross::before{border:0;border-top:2px dashed #b3261e;height:0;border-radius:0;background:transparent}.dfd-key .k-flow::before{border:0;border-top:2px solid #444;height:0;border-radius:0;background:transparent}
+
+/* boundaries and components */
+.bnd{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.bnd .card h4{display:flex;gap:8px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:6px}
+.el{display:grid;grid-template-columns:max-content 1fr;gap:2px 10px;align-items:baseline;padding:7px 0;border-top:1px solid var(--line)}
+.el:first-of-type{border-top:0}.el .x{grid-column:1/3;color:var(--ink-3);font-size:12.5px}
+
+/* glossary */
+.gl{margin:0}.gl dt{font-weight:700;margin-top:10px}.gl dt:first-child{margin-top:0}.gl dd{margin:2px 0 0;color:var(--ink-2)}
+.gl .chip{margin-right:4px}
+
+.foot{margin:48px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink-3)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;background:var(--surface-2);padding:1px 4px;border-radius:4px}
+
+/* audience views */
+body[data-view="exec"] .part-tech,body[data-view="exec"] .toc-tech{display:none}
+body[data-view="tech"] .part-exec,body[data-view="tech"] .toc-exec{display:none}
+
+@media (max-width:640px){html{scroll-padding-top:96px}#print,.topbar-meta{display:none}.switch{width:100%;justify-content:space-between}.switch button{flex:1;padding:5px 6px;font-size:12.5px}.heat th .muted{display:none}.heat th.y{width:auto;white-space:nowrap}.heat td{height:46px;font-size:16px}.report-head h1{font-size:24px}.tile-value{font-size:26px}.layout{padding:0 16px 60px}.sec h3{font-size:17px}.part-head h2{font-size:21px}th,td{padding:7px 9px}}
+
+/* print */
+@page{margin:14mm}
+@media print{
+body{background:#fff;color:#000;font-size:11pt}
+.topbar{position:static;box-shadow:none;border:0}.switch,.btn,.toc,.filters,.fig-tools,.skip,#print{display:none!important}
+.layout{display:block;padding:0}.card,.tile,.risk,.bar,.table-wrap,.fig{box-shadow:none;break-inside:avoid}
+.part-head{break-before:page}.part-head:first-of-type{break-before:auto}
+h3,h4{break-after:avoid}tr{break-inside:avoid}
+a{color:inherit;text-decoration:none}
+.fig-canvas{overflow:visible;max-height:none}.fig-canvas svg{max-width:100%!important;width:100%!important}
+.table-wrap{overflow:visible}#flows td,#reg td{min-width:0}table{font-size:10pt}th,td{padding:5px 7px}
+.risks{grid-template-columns:1fr 1fr}.tiles{grid-template-columns:repeat(5,1fr)}
+tr.d[hidden]{display:none}}
+</style></head><body data-view="all"><a class="skip" href="#main">Skip to content</a><header class="topbar"><div class="topbar-in"><div class="brand"><span class="eyebrow">Threat model</span><p class="brand-name">Acme Scheduler</p></div><div class="topbar-meta"><span>v0.1.0</span><span>·</span><span>2026-10-29</span><span class="chip chip-open">Internal</span></div><div class="switch" role="group" aria-label="Choose what to show"><button type="button" data-view="exec" aria-pressed="false">Executive brief</button><button type="button" data-view="tech" aria-pressed="false">Technical detail</button><button type="button" data-view="all" aria-pressed="true">Everything</button></div><button type="button" class="btn" id="print">Print / PDF</button></div></header><div class="layout"><nav class="toc" aria-label="Contents"><div class="toc-exec"><p class="toc-group">For leadership</p><a href="#brief">1. Executive brief</a><a href="#posture">2. Posture at a glance</a><a href="#top-risks">3. Top risks</a><a href="#decisions">4. Decisions needed</a><a href="#ownership">5. Who owns what</a><a href="#reading">6. How to read this report</a></div><div class="toc-tech"><p class="toc-group">For engineering</p><a href="#scope">7. Scope and assumptions</a><a href="#dfd">8. Data-flow diagrams</a><a href="#elements">9. Boundaries and components</a><a href="#flows">10. Data flows</a><a href="#assets">11. Assets</a><a href="#register">12. Threat register</a><a href="#coverage">13. STRIDE coverage</a><a href="#heatmap">14. Risk heat map</a><a href="#plan">15. Mitigation plan</a><a href="#divergences">16. Divergences found while modelling</a><a href="#method">17. Method and metadata</a></div></nav><main id="main"><div class="report-head"><span class="eyebrow">STRIDE threat model · design-time security review</span><h1>Acme Scheduler</h1><dl class="meta-strip"><div><dt>Version</dt><dd title="0.1.0">0.1.0</dd></div><div><dt>Assessed</dt><dd title="2026-10-29">2026-10-29</dd></div><div><dt>Authors</dt><dd title="Security Architecture">Security Architecture</dd></div><div><dt>Status</dt><dd title="Draft — pending review">Draft — pending review</dd></div><div><dt>Basis</dt><dd title="planning suite v1.0.0-draft (docs 03, 04, 05, 07, 08)">planning suite v1.0.0-draft (docs 03, 04, 05, 07, 08)</dd></div></dl></div><div class="part-head part-exec"><span class="eyebrow">Part A · For leadership</span><h2>Executive brief</h2><p>What the review found, what it means for the business and what needs a decision. Written to be read in ten minutes; the evidence is in Part B.</p></div><section class="sec" id="brief" aria-labelledby="brief-h"><h3 id="brief-h"><span class="num">1</span>Executive brief</h3><div class="card brief"><p class="auto">This review examined <b>7 components</b> and <b>6 data paths</b> (4 of them crossing a trust boundary) of Acme Scheduler version 0.1.0, assessed on 2026-10-29. It identified <b>3 threats</b>: 2 already have a control in place and <b>1 need action</b>, none of them high priority. <b>42 required assessments are still missing</b>; the coverage matrix in Part B lists them.</p><p>The design covers the main entry points well; the open items concern the job queue and operational hardening.</p></div></section><section class="sec" id="posture" aria-labelledby="posture-h"><h3 id="posture-h"><span class="num">2</span>Posture at a glance</h3><p class="lead">How many threats were found, how severe they are, and whether a control already exists for them.</p><div class="tiles"><div class="tile "><span class="tile-label">Threats identified</span><span class="tile-value">3</span><span class="tile-sub">across 7 components and 6 data paths</span></div><div class="tile tone-act"><span class="tile-label">Need action</span><span class="tile-value">1</span><span class="tile-sub">none high priority</span></div><div class="tile tone-good"><span class="tile-label">Controlled</span><span class="tile-value">2</span><span class="tile-sub">control designed and in place</span></div><div class="tile "><span class="tile-label">Accepted or transferred</span><span class="tile-value">0</span><span class="tile-sub">signed off, or handled by a provider</span></div><div class="tile tone-warn"><span class="tile-label">Assessment coverage</span><span class="tile-value">9%</span><span class="tile-sub">42 required cells unassessed</span></div></div><div class="bars"><figure class="bar"><figcaption>By severity (likelihood × impact)</figcaption><div class="bar-track" role="img" aria-label="By severity (likelihood × impact): Critical 0, High 1, Medium 2, Low 0"><div class="sw-high" style="flex:1 0 0" title="High: 1"></div><div class="sw-med" style="flex:2 0 0" title="Medium: 2"></div></div><div class="legend"><span class="lg"><i class="sw-crit"></i>Critical <b>0</b></span><span class="lg"><i class="sw-high"></i>High <b>1</b></span><span class="lg"><i class="sw-med"></i>Medium <b>2</b></span><span class="lg"><i class="sw-low"></i>Low <b>0</b></span></div></figure><figure class="bar"><figcaption>By status</figcaption><div class="bar-track" role="img" aria-label="By status: Open 1, Accepted 0, Transferred 0, Mitigated 2"><div class="sw-open" style="flex:1 0 0" title="Open: 1"></div><div class="sw-mitigated" style="flex:2 0 0" title="Mitigated: 2"></div></div><div class="legend"><span class="lg"><i class="sw-open"></i>Open <b>1</b></span><span class="lg"><i class="sw-accepted"></i>Accepted <b>0</b></span><span class="lg"><i class="sw-transferred"></i>Transferred <b>0</b></span><span class="lg"><i class="sw-mitigated"></i>Mitigated <b>2</b></span></div></figure></div></section><section class="sec" id="top-risks" aria-labelledby="top-risks-h"><h3 id="top-risks-h"><span class="num">3</span>Top risks</h3><p class="lead">The 1 open threats with the highest score, ranked by likelihood × impact; 0 of them are rated High or Critical. Each card says what could happen in business terms and what the fix is; the threat id opens the full technical record in Part B.</p><div class="risks"><article class="risk"><div class="risk-head"><span class="rank">1</span><span class="chip chip-med"><i></i>Medium <span class="sc">8</span></span><span class="chip chip-open"><span aria-hidden="true">○</span>Open</span></div><h4>Background jobs can be made to act on another customer&#x27;s data</h4><p class="tech-title">Forged job payload in the queue</p><dl><dt>What could happen</dt><dd>Anyone who can reach the job queue could make a background job act on another customer&#x27;s data.</dd><dt>What we recommend</dt><dd>Password-protect the queue and have every job re-check its permissions before it runs.</dd></dl><footer><span><b>Owner</b> Backend lead</span><span><b>When</b> S03-B2</span><span><b>Effort</b> M</span><span><a class="tl id" href="#T-2">T-2</a> · Job dequeue</span></footer></article></div></section><section class="sec" id="decisions" aria-labelledby="decisions-h"><h3 id="decisions-h"><span class="num">4</span>Decisions needed</h3><p class="lead">What leadership is asked to approve, fund or decide. Each decision names the threats it resolves.</p><div class="table-wrap"><table class=""><thead><tr><th class="num">#</th><th>Decision</th><th>Resolves</th><th>Owner</th><th>By</th></tr></thead><tbody><tr><td class="num">1</td><td><b>Fund Redis authentication and worker re-authorization before the first customer tenant goes live.</b><div class="why">Closes the only open High-band path to cross-tenant data.</div></td><td><a class="tl id" href="#T-2">T-2</a></td><td>Product owner</td><td>S03 planning</td></tr></tbody></table></div></section><section class="sec" id="ownership" aria-labelledby="ownership-h"><h3 id="ownership-h"><span class="num">5</span>Who owns what</h3><p class="lead">Open work by owner. The next action is each owner's highest-scored open threat.</p><div class="table-wrap"><table class=""><thead><tr><th>Owner</th><th class="num">Open</th><th class="num">High priority</th><th class="num">Mitigated</th><th class="num">Accepted / transferred</th><th>Next action</th></tr></thead><tbody><tr><td><b>Backend lead</b></td><td class="num">1</td><td class="num">0</td><td class="num">2</td><td class="num">0</td><td><a class="tl id" href="#T-2">T-2</a> Forged job payload in the queue</td></tr></tbody></table></div></section><section class="sec" id="reading" aria-labelledby="reading-h"><h3 id="reading-h"><span class="num">6</span>How to read this report</h3><div class="cols"><div class="card"><h4>The six threat categories (STRIDE)</h4><dl class="gl"><dt>Spoofing (S)</dt><dd>pretending to be another user or system</dd><dt>Tampering (T)</dt><dd>changing data, code or messages without permission</dd><dt>Repudiation (R)</dt><dd>denying an action because there is no trustworthy record of it</dd><dt>Information disclosure (I)</dt><dd>exposing data to people who should not see it</dd><dt>Denial of service (D)</dt><dd>making the service slow or unavailable</dd><dt>Elevation of privilege (E)</dt><dd>gaining rights or access one should not have</dd></dl></div><div class="card"><h4>How risk is scored</h4><dl class="gl"><dt>Score = likelihood × impact</dt><dd>Both on a 1–5 scale: likelihood is how plausible the attack is within a year given today's controls; impact is the worst credible outcome for the business.</dd><dt>Severity bands</dt><dd><span class="chip chip-crit"><i></i>Critical</span> 20–25 <span class="chip chip-high"><i></i>High</span> 12–19 <span class="chip chip-med"><i></i>Medium</span> 6–11 <span class="chip chip-low"><i></i>Low</span> 1–5</dd><dt>High priority</dt><dd>An open threat rated High or Critical. A Critical or High risk can only be accepted with a named approver.</dd></dl></div><div class="card"><h4>Status of a threat</h4><dl class="gl"><dt><span class="chip chip-open"><span aria-hidden="true">○</span>Open</span></dt><dd>needs action: no adequate control yet</dd><dt><span class="chip chip-accepted"><span aria-hidden="true">✎</span>Accepted</span></dt><dd>residual risk signed off by a named approver</dd><dt><span class="chip chip-transferred"><span aria-hidden="true">⇄</span>Transferred</span></dt><dd>handled by a provider or a contract</dd><dt><span class="chip chip-mitigated"><span aria-hidden="true">✓</span>Mitigated</span></dt><dd>a control is designed and in place</dd></dl></div><div class="card"><h4>Terms used in this report</h4><dl class="gl"><dt>Component</dt><dd>A part of the system: a kind of user or outside party, a running service, or a place data is kept.</dd><dt>Data path</dt><dd>Data moving from one component to another.</dd><dt>Trust boundary</dt><dd>A line where the level of trust changes, such as the public internet meeting our servers. Most threats sit on paths that cross one.</dd><dt>Coverage</dt><dd>Every component and data path was asked every applicable STRIDE question; a cell is either a threat, a reasoned “no threat”, or a gap.</dd><dt>Divergence</dt><dd>A place where two sources disagree (one document against another, or a document against the code). Each is a finding to resolve.</dd></dl></div></div></section><div class="part-head part-tech"><span class="eyebrow">Part B · For engineering</span><h2>Technical detail</h2><p>The data-flow model, every threat with its controls and references, coverage evidence and the mitigation plan.</p></div><section class="sec" id="scope" aria-labelledby="scope-h"><h3 id="scope-h"><span class="num">7</span>Scope and assumptions</h3><p class="lead"><b>Basis:</b> planning suite v1.0.0-draft (docs 03, 04, 05, 07, 08) · <b>Authors:</b> Security Architecture</p><div class="cols"><div class="card"><h4>In scope</h4><ul><li>web app</li><li>API</li><li>workers</li><li>database</li><li>object storage</li></ul></div><div class="card"><h4>Out of scope</h4><ul><li>customer SSO provider internals</li><li>physical security</li></ul></div><div class="card"><h4>Assumptions</h4><ul><li>Ingress terminates TLS; the application network is not reachable from the internet.</li><li>Workers have no outbound internet access except the SMTP relay.</li></ul></div></div></section><section class="sec" id="dfd" aria-labelledby="dfd-h"><h3 id="dfd-h"><span class="num">8</span>Data-flow diagrams</h3><p class="lead">Level 0 shows the system as one process with its external parties. Level 1 opens it up: processes, data stores, trust boundaries and every data path. Arrows carry the flow id; the data-flow table below is the legend and hovering an arrow shows its name. Use the zoom controls or open the SVG for the full-size drawing.</p><div class="dfd-key"><span class="k-ent">External entity</span><span class="k-proc">Process</span><span class="k-store">Data store</span><span class="k-bnd">Trust boundary</span><span class="k-flow">Data flow</span><span class="k-cross">Flow crossing a boundary</span></div><figure class="fig" id="dfd-l0"><div class="fig-bar"><span class="fig-title">Level 0 — context</span><div class="fig-tools"><button type="button" class="btn btn-sm" data-act="out" aria-label="Zoom out">−</button><span class="fig-zoom">fit</span><button type="button" class="btn btn-sm" data-act="in" aria-label="Zoom in">+</button><button type="button" class="btn btn-sm" data-act="fit">Fit</button><button type="button" class="btn btn-sm" data-act="full">Full screen</button><a class="btn btn-sm" href="dfd-l0.svg" target="_blank" rel="noopener">Open SVG</a></div></div><div class="fig-canvas"><svg width="586pt" height="52pt"
+ viewBox="0.00 0.00 586.00 52.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="l0-graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 48)">
+<title>L0</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-48 582,-48 582,4 -4,4"/>
+<!-- SYS -->
+<g id="l0-node1" class="node">
+<title>SYS</title>
+<ellipse fill="#eaf6ea" stroke="black" cx="285" cy="-22" rx="79" ry="18"/>
+<text text-anchor="middle" x="285" y="-19.2" font-family="Helvetica,sans-Serif" font-size="11.00">Acme Scheduler</text>
+</g>
+<!-- E&#45;2 -->
+<g id="l0-node3" class="node">
+<title>E&#45;2</title>
+<polygon fill="#e7f0fb" stroke="black" points="578,-40 500,-40 500,-4 578,-4 578,-40"/>
+<text text-anchor="middle" x="539" y="-25.2" font-family="Helvetica,sans-Serif" font-size="11.00">E&#45;2</text>
+<text text-anchor="middle" x="539" y="-13.2" font-family="Helvetica,sans-Serif" font-size="11.00">SMTP relay</text>
+</g>
+<!-- SYS&#45;&gt;E&#45;2 -->
+<g id="l0-edge2" class="edge">
+<title>SYS&#45;&gt;E&#45;2</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M364.01,-22C405.06,-22 454.09,-22 489.63,-22"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="489.74,-25.5 499.74,-22 489.74,-18.5 489.74,-25.5"/>
+<text text-anchor="middle" x="432" y="-24.8" font-family="Helvetica,sans-Serif" font-size="9.00">1 flow(s), confidential</text>
+</g>
+<!-- E&#45;1 -->
+<g id="l0-node2" class="node">
+<title>E&#45;1</title>
+<polygon fill="#e7f0fb" stroke="black" points="70,-44 0,-44 0,0 70,0 70,-44"/>
+<text text-anchor="middle" x="35" y="-31.2" font-family="Helvetica,sans-Serif" font-size="11.00">E&#45;1</text>
+<text text-anchor="middle" x="35" y="-19.2" font-family="Helvetica,sans-Serif" font-size="11.00">Staff user</text>
+<text text-anchor="middle" x="35" y="-7.2" font-family="Helvetica,sans-Serif" font-size="11.00">(browser)</text>
+</g>
+<!-- E&#45;1&#45;&gt;SYS -->
+<g id="l0-edge1" class="edge">
+<title>E&#45;1&#45;&gt;SYS</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M70.22,-22C102.52,-22 152.33,-22 195.75,-22"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="195.77,-25.5 205.77,-22 195.77,-18.5 195.77,-25.5"/>
+<text text-anchor="middle" x="138" y="-24.8" font-family="Helvetica,sans-Serif" font-size="9.00">1 flow(s), confidential</text>
+</g>
+</g>
+</svg>
+</div></figure><figure class="fig" id="dfd-l1"><div class="fig-bar"><span class="fig-title">Level 1 — processes, stores and trust boundaries</span><div class="fig-tools"><button type="button" class="btn btn-sm" data-act="out" aria-label="Zoom out">−</button><span class="fig-zoom">fit</span><button type="button" class="btn btn-sm" data-act="in" aria-label="Zoom in">+</button><button type="button" class="btn btn-sm" data-act="fit">Fit</button><button type="button" class="btn btn-sm" data-act="full">Full screen</button><a class="btn btn-sm" href="dfd-l1.svg" target="_blank" rel="noopener">Open SVG</a></div></div><div class="fig-canvas"><svg width="1283pt" height="214pt"
+ viewBox="0.00 0.00 1282.99 214.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="l1-graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 210)">
+<title>L1</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-210 1278.99,-210 1278.99,4 -4,4"/>
+<g id="l1-clust1" class="cluster">
+<title>cluster_B_1</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M12,-101C12,-101 146,-101 146,-101 152,-101 158,-107 158,-113 158,-113 158,-172 158,-172 158,-178 152,-184 146,-184 146,-184 12,-184 12,-184 6,-184 0,-178 0,-172 0,-172 0,-113 0,-113 0,-107 6,-101 12,-101"/>
+<text text-anchor="middle" x="79" y="-168.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Public network (B&#45;1)</text>
+</g>
+<g id="l1-clust2" class="cluster">
+<title>cluster_B_2</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M235,-92C235,-92 395.29,-92 395.29,-92 401.29,-92 407.29,-98 407.29,-104 407.29,-104 407.29,-181 407.29,-181 407.29,-187 401.29,-193 395.29,-193 395.29,-193 235,-193 235,-193 229,-193 223,-187 223,-181 223,-181 223,-104 223,-104 223,-98 229,-92 235,-92"/>
+<text text-anchor="middle" x="315.15" y="-177.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Ingress / DMZ (B&#45;2)</text>
+</g>
+<g id="l1-clust3" class="cluster">
+<title>cluster_B_3</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M484.29,-99C484.29,-99 1054.99,-99 1054.99,-99 1060.99,-99 1066.99,-105 1066.99,-111 1066.99,-111 1066.99,-186 1066.99,-186 1066.99,-192 1060.99,-198 1054.99,-198 1054.99,-198 484.29,-198 484.29,-198 478.29,-198 472.29,-192 472.29,-186 472.29,-186 472.29,-111 472.29,-111 472.29,-105 478.29,-99 484.29,-99"/>
+<text text-anchor="middle" x="769.64" y="-182.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Application network (B&#45;3)</text>
+</g>
+<g id="l1-clust4" class="cluster">
+<title>cluster_B_4</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M694.41,-8C694.41,-8 819.41,-8 819.41,-8 825.41,-8 831.41,-14 831.41,-20 831.41,-20 831.41,-79 831.41,-79 831.41,-85 825.41,-91 819.41,-91 819.41,-91 694.41,-91 694.41,-91 688.41,-91 682.41,-85 682.41,-79 682.41,-79 682.41,-20 682.41,-20 682.41,-14 688.41,-8 694.41,-8"/>
+<text text-anchor="middle" x="756.91" y="-75.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Data network (B&#45;4)</text>
+</g>
+<g id="l1-clust5" class="cluster">
+<title>cluster_B_5</title>
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M1143.99,-111C1143.99,-111 1262.99,-111 1262.99,-111 1268.99,-111 1274.99,-117 1274.99,-123 1274.99,-123 1274.99,-174 1274.99,-174 1274.99,-180 1268.99,-186 1262.99,-186 1262.99,-186 1143.99,-186 1143.99,-186 1137.99,-186 1131.99,-180 1131.99,-174 1131.99,-174 1131.99,-123 1131.99,-123 1131.99,-117 1137.99,-111 1143.99,-111"/>
+<text text-anchor="middle" x="1203.49" y="-170.8" font-family="Helvetica,sans-Serif" font-size="14.00" fill="#b3261e">Third parties (B&#45;5)</text>
+</g>
+<!-- E&#45;1 -->
+<g id="l1-node1" class="node">
+<title>E&#45;1</title>
+<polygon fill="#e7f0fb" stroke="black" points="114,-153 44,-153 44,-109 114,-109 114,-153"/>
+<text text-anchor="middle" x="79" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">E&#45;1</text>
+<text text-anchor="middle" x="79" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">Staff user</text>
+<text text-anchor="middle" x="79" y="-116.2" font-family="Helvetica,sans-Serif" font-size="11.00">(browser)</text>
+</g>
+<!-- P&#45;1 -->
+<g id="l1-node2" class="node">
+<title>P&#45;1</title>
+<ellipse fill="#eaf6ea" stroke="black" cx="315.15" cy="-131" rx="84.29" ry="31.23"/>
+<text text-anchor="middle" x="315.15" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">P&#45;1</text>
+<text text-anchor="middle" x="315.15" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">Ingress (TLS, WAF,</text>
+<text text-anchor="middle" x="315.15" y="-116.2" font-family="Helvetica,sans-Serif" font-size="11.00">rate limits)</text>
+</g>
+<!-- E&#45;1&#45;&gt;P&#45;1 -->
+<g id="l1-edge1" class="edge">
+<title>E&#45;1&#45;&gt;P&#45;1</title>
+<g id="l1-a_edge1"><a xlink:title="HTTPS requests">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M114.05,-131C141.93,-131 182.76,-131 220.27,-131"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="220.75,-134.5 230.75,-131 220.75,-127.5 220.75,-134.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="190.5" y="-133.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;1</text>
+</g>
+<!-- P&#45;2 -->
+<g id="l1-node3" class="node">
+<title>P&#45;2</title>
+<ellipse fill="#eaf6ea" stroke="black" cx="541.1" cy="-131" rx="60.62" ry="22.76"/>
+<text text-anchor="middle" x="541.1" y="-134.2" font-family="Helvetica,sans-Serif" font-size="11.00">P&#45;2</text>
+<text text-anchor="middle" x="541.1" y="-122.2" font-family="Helvetica,sans-Serif" font-size="11.00">API (FastAPI)</text>
+</g>
+<!-- P&#45;1&#45;&gt;P&#45;2 -->
+<g id="l1-edge2" class="edge">
+<title>P&#45;1&#45;&gt;P&#45;2</title>
+<g id="l1-a_edge2"><a xlink:title="Proxied requests">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M399.54,-131C422.73,-131 447.67,-131 470.01,-131"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="470.07,-134.5 480.07,-131 470.07,-127.5 470.07,-134.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="439.79" y="-133.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;2</text>
+</g>
+<!-- D&#45;2 -->
+<g id="l1-node5" class="node">
+<title>D&#45;2</title>
+<path fill="#fff4e0" stroke="black" d="M803.91,-161.96C803.91,-165.02 782.62,-167.5 756.41,-167.5 730.2,-167.5 708.91,-165.02 708.91,-161.96 708.91,-161.96 708.91,-112.04 708.91,-112.04 708.91,-108.98 730.2,-106.5 756.41,-106.5 782.62,-106.5 803.91,-108.98 803.91,-112.04 803.91,-112.04 803.91,-161.96 803.91,-161.96"/>
+<path fill="none" stroke="black" d="M803.91,-161.96C803.91,-158.9 782.62,-156.41 756.41,-156.41 730.2,-156.41 708.91,-158.9 708.91,-161.96"/>
+<text text-anchor="middle" x="756.41" y="-146.2" font-family="Helvetica,sans-Serif" font-size="11.00">D&#45;2</text>
+<text text-anchor="middle" x="756.41" y="-134.2" font-family="Helvetica,sans-Serif" font-size="11.00">Redis (tokens,</text>
+<text text-anchor="middle" x="756.41" y="-122.2" font-family="Helvetica,sans-Serif" font-size="11.00">queue)</text>
+</g>
+<!-- P&#45;2&#45;&gt;D&#45;2 -->
+<g id="l1-edge4" class="edge">
+<title>P&#45;2&#45;&gt;D&#45;2</title>
+<g id="l1-a_edge4"><a xlink:title="Token and job writes">
+<path fill="none" stroke="#444444" d="M601.81,-132.68C632.01,-133.53 668.5,-134.56 698.34,-135.39"/>
+<polygon fill="#444444" stroke="#444444" points="698.49,-138.9 708.59,-135.68 698.69,-131.9 698.49,-138.9"/>
+</a>
+</g>
+<text text-anchor="middle" x="642.41" y="-136.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#444444">F&#45;4</text>
+</g>
+<!-- D&#45;1 -->
+<g id="l1-node6" class="node">
+<title>D&#45;1</title>
+<path fill="#fff4e0" stroke="black" d="M796.41,-56C796.41,-58.21 778.49,-60 756.41,-60 734.34,-60 716.41,-58.21 716.41,-56 716.41,-56 716.41,-20 716.41,-20 716.41,-17.79 734.34,-16 756.41,-16 778.49,-16 796.41,-17.79 796.41,-20 796.41,-20 796.41,-56 796.41,-56"/>
+<path fill="none" stroke="black" d="M796.41,-56C796.41,-53.79 778.49,-52 756.41,-52 734.34,-52 716.41,-53.79 716.41,-56"/>
+<text text-anchor="middle" x="756.41" y="-41.2" font-family="Helvetica,sans-Serif" font-size="11.00">D&#45;1</text>
+<text text-anchor="middle" x="756.41" y="-29.2" font-family="Helvetica,sans-Serif" font-size="11.00">PostgreSQL</text>
+</g>
+<!-- P&#45;2&#45;&gt;D&#45;1 -->
+<g id="l1-edge3" class="edge">
+<title>P&#45;2&#45;&gt;D&#45;1</title>
+<g id="l1-a_edge3"><a xlink:title="SQL">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M581.23,-113.94C616.6,-98.52 668.8,-75.76 706.83,-59.18"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="708.41,-62.31 716.18,-55.11 705.61,-55.89 708.41,-62.31"/>
+</a>
+</g>
+<text text-anchor="middle" x="642.41" y="-92.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;3</text>
+</g>
+<!-- P&#45;3 -->
+<g id="l1-node4" class="node">
+<title>P&#45;3</title>
+<ellipse fill="#eaf6ea" stroke="black" cx="985.45" cy="-137" rx="73.58" ry="22.76"/>
+<text text-anchor="middle" x="985.45" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">P&#45;3</text>
+<text text-anchor="middle" x="985.45" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">Worker (Celery)</text>
+</g>
+<!-- E&#45;2 -->
+<g id="l1-node7" class="node">
+<title>E&#45;2</title>
+<polygon fill="#e7f0fb" stroke="black" points="1241.99,-155 1163.99,-155 1163.99,-119 1241.99,-119 1241.99,-155"/>
+<text text-anchor="middle" x="1202.99" y="-140.2" font-family="Helvetica,sans-Serif" font-size="11.00">E&#45;2</text>
+<text text-anchor="middle" x="1202.99" y="-128.2" font-family="Helvetica,sans-Serif" font-size="11.00">SMTP relay</text>
+</g>
+<!-- P&#45;3&#45;&gt;E&#45;2 -->
+<g id="l1-edge6" class="edge">
+<title>P&#45;3&#45;&gt;E&#45;2</title>
+<g id="l1-a_edge6"><a xlink:title="Transactional email">
+<path fill="none" stroke="#b3261e" stroke-dasharray="5,2" d="M1059.12,-137C1090.23,-137 1125.71,-137 1153.53,-137"/>
+<polygon fill="#b3261e" stroke="#b3261e" points="1153.79,-140.5 1163.79,-137 1153.79,-133.5 1153.79,-140.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="1099.49" y="-139.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#b3261e">F&#45;6</text>
+</g>
+<!-- D&#45;2&#45;&gt;P&#45;3 -->
+<g id="l1-edge5" class="edge">
+<title>D&#45;2&#45;&gt;P&#45;3</title>
+<g id="l1-a_edge5"><a xlink:title="Job dequeue">
+<path fill="none" stroke="#444444" d="M804.18,-137C832.3,-137 868.89,-137 901.75,-137"/>
+<polygon fill="#444444" stroke="#444444" points="901.81,-140.5 911.81,-137 901.81,-133.5 901.81,-140.5"/>
+</a>
+</g>
+<text text-anchor="middle" x="871.41" y="-139.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#444444">F&#45;5</text>
+</g>
+</g>
+</svg>
+</div></figure></section><section class="sec" id="elements" aria-labelledby="elements-h"><h3 id="elements-h"><span class="num">9</span>Boundaries and components</h3><p class="lead">7 components grouped by the 5 trust boundaries they sit in.</p><div class="bnd"><div class="card"><h4>Public network<span class="id muted">B-1</span></h4><div class="el"><span class="id">E-1</span><span><b>Staff user (browser)</b> <span class="kind">entity</span></span><span class="x">principal: ROLE_STAFF</span></div></div><div class="card"><h4>Ingress / DMZ<span class="id muted">B-2</span></h4><div class="el"><span class="id">P-1</span><span><b>Ingress (TLS, WAF, rate limits)</b> <span class="kind">process</span></span></div></div><div class="card"><h4>Application network<span class="id muted">B-3</span></h4><div class="el"><span class="id">P-2</span><span><b>API (FastAPI)</b> <span class="kind">process</span></span><span class="x">doc: 03 §1</span></div><div class="el"><span class="id">P-3</span><span><b>Worker (Celery)</b> <span class="kind">process</span></span></div><div class="el"><span class="id">D-2</span><span><b>Redis (tokens, queue)</b> <span class="kind">store</span></span><span class="x">classification: confidential</span></div></div><div class="card"><h4>Data network<span class="id muted">B-4</span></h4><div class="el"><span class="id">D-1</span><span><b>PostgreSQL</b> <span class="kind">store</span></span><span class="x">classification: restricted</span></div></div><div class="card"><h4>Third parties<span class="id muted">B-5</span></h4><div class="el"><span class="id">E-2</span><span><b>SMTP relay</b> <span class="kind">entity</span></span></div></div></div></section><section class="sec" id="flows" aria-labelledby="flows-h"><h3 id="flows-h"><span class="num">10</span>Data flows</h3><p class="lead">6 data paths, 4 of which cross a trust boundary. The flow id is the label on the diagram arrows.</p><div class="filters"><label><input type="checkbox" id="flows-cross"> Cross-boundary flows only</label><span class="count" id="flows-count"></span></div><div class="table-wrap"><table id="flows-table" class=""><thead><tr><th>ID</th><th>From → To</th><th>Name</th><th>Protocol</th><th>Data</th><th>Classification</th><th>Crosses boundary</th></tr></thead><tbody><tr data-cross="1"><td class="id">F-1</td><td><span class="id">E-1</span> → <span class="id">P-1</span><span class="target-sub">Staff user (browser) → Ingress (TLS, WAF, rate limits)</span></td><td>HTTPS requests</td><td>HTTPS/TLS 1.3</td><td>credentials, session cookie, form data</td><td><span class="chip chip-cls cls-confidential">confidential</span></td><td><span class="chip chip-high"><i></i>Public network → Ingress / DMZ</span></td></tr><tr data-cross="1"><td class="id">F-2</td><td><span class="id">P-1</span> → <span class="id">P-2</span><span class="target-sub">Ingress (TLS, WAF, rate limits) → API (FastAPI)</span></td><td>Proxied requests</td><td>HTTP (private network)</td><td>same as F-1 plus trace id</td><td><span class="chip chip-cls cls-confidential">confidential</span></td><td><span class="chip chip-high"><i></i>Ingress / DMZ → Application network</span></td></tr><tr data-cross="1"><td class="id">F-3</td><td><span class="id">P-2</span> → <span class="id">D-1</span><span class="target-sub">API (FastAPI) → PostgreSQL</span></td><td>SQL</td><td>TCP/TLS</td><td>all records</td><td><span class="chip chip-cls cls-restricted">restricted</span></td><td><span class="chip chip-high"><i></i>Application network → Data network</span></td></tr><tr data-cross="0"><td class="id">F-4</td><td><span class="id">P-2</span> → <span class="id">D-2</span><span class="target-sub">API (FastAPI) → Redis (tokens, queue)</span></td><td>Token and job writes</td><td>TCP</td><td>refresh tokens, job payloads</td><td><span class="chip chip-cls cls-confidential">confidential</span></td><td><span class="muted">—</span></td></tr><tr data-cross="0"><td class="id">F-5</td><td><span class="id">D-2</span> → <span class="id">P-3</span><span class="target-sub">Redis (tokens, queue) → Worker (Celery)</span></td><td>Job dequeue</td><td>TCP</td><td>job payloads</td><td><span class="chip chip-cls cls-confidential">confidential</span></td><td><span class="muted">—</span></td></tr><tr data-cross="1"><td class="id">F-6</td><td><span class="id">P-3</span> → <span class="id">E-2</span><span class="target-sub">Worker (Celery) → SMTP relay</span></td><td>Transactional email</td><td>SMTP/STARTTLS</td><td>notification text, links</td><td><span class="chip chip-cls cls-confidential">confidential</span></td><td><span class="chip chip-high"><i></i>Application network → Third parties</span></td></tr></tbody></table></div></section><section class="sec" id="assets" aria-labelledby="assets-h"><h3 id="assets-h"><span class="num">11</span>Assets</h3><p class="lead">What the attacker is after and where it lives.</p><div class="table-wrap"><table class=""><thead><tr><th>ID</th><th>Asset</th><th>Classification</th><th>Stored in</th><th>Note</th></tr></thead><tbody><tr><td class="id">A-1</td><td>Session and refresh tokens</td><td><span class="chip chip-cls cls-restricted">restricted</span></td><td><span class=id>D-2</span> Redis (tokens, queue)</td><td></td></tr><tr><td class="id">A-2</td><td>Customer records</td><td><span class="chip chip-cls cls-restricted">restricted</span></td><td><span class=id>D-1</span> PostgreSQL</td><td></td></tr></tbody></table></div></section><section class="sec" id="register" aria-labelledby="register-h"><h3 id="register-h"><span class="num">12</span>Threat register</h3><p class="lead">Every threat with its target, STRIDE category, score, status and owner. Click a title for the description, existing controls, mitigation, plan and references. Headers sort; the filters narrow the list; the heat map and coverage matrix link here.</p><div class="filters"><input id="f-q" type="search" placeholder="Search id, title, control, reference…" aria-label="Search threats"><select id="f-cat" aria-label="Category"><option value="">All categories</option><option value="S">S · Spoofing</option><option value="T">T · Tampering</option><option value="R">R · Repudiation</option><option value="I">I · Information disclosure</option><option value="D">D · Denial of service</option><option value="E">E · Elevation of privilege</option></select><select id="f-band" aria-label="Severity"><option value="">All severities</option><option value="Critical">Critical</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select><select id="f-status" aria-label="Status"><option value="">All statuses</option><option value="open">Open</option><option value="accepted">Accepted</option><option value="transferred">Transferred</option><option value="mitigated">Mitigated</option></select><select id="f-owner" aria-label="Owner"><option value="">All owners</option><option value="Backend lead">Backend lead</option></select><span class="cell-chip" id="cell-chip" hidden><span id="cell-chip-text"></span><button type="button" id="cell-chip-x" aria-label="Clear heat-map filter">×</button></span><button type="button" class="btn btn-sm" id="f-clear">Clear</button><button type="button" class="btn btn-sm" id="reg-expand">Expand all</button><button type="button" class="btn btn-sm" id="reg-collapse">Collapse all</button><span class="count" id="reg-count"></span></div><div class="table-wrap"><table id="reg" class=""><thead><tr><th data-sort="n" tabindex="0" title="Sort">ID</th><th data-sort="target" tabindex="0" title="Sort">Target</th><th data-sort="cat" tabindex="0" title="Sort">Cat</th><th>Threat</th><th class="num" data-sort="score" tabindex="0" title="Sort">Score</th><th data-sort="bandrank" tabindex="0" title="Sort">Severity</th><th data-sort="status" tabindex="0" title="Sort">Status</th><th data-sort="owner" tabindex="0" title="Sort">Owner</th></tr></thead><tbody><tr class="t" id="row-T-1" data-open="0" data-n="1" data-target="E-1" data-cat="S" data-band="High" data-bandrank="1" data-status="mitigated" data-owner="Backend lead" data-score="12" data-l="3" data-i="4"><td class="id">T-1</td><td><span class="id">E-1</span><span class="target-sub">Staff user (browser)</span></td><td><abbr class="cat" title="Spoofing">S</abbr></td><td><button type="button" class="rowtoggle" aria-expanded="false" aria-controls="det-T-1">Session cookie theft via XSS</button></td><td class="num">3×4 = <b>12</b></td><td><span class="chip chip-high"><i></i>High</span></td><td><span class="chip chip-mitigated"><span aria-hidden="true">✓</span>Mitigated</span></td><td>Backend lead</td></tr><tr class="d" id="det-T-1" hidden><td colspan="8"><div class="detail"><p>An attacker injects script through a rich-text field, exfiltrates the session cookie and acts as the staff user.</p><dl><dt>Existing controls</dt><dd><ul><li>08 §7.1 CSP with no inline script</li><li>08 §5.2 sanitize-on-write</li></ul></dd><dt>Mitigation</dt><dd>HttpOnly + SameSite cookies; CSP regression test in CI</dd><dt>References</dt><dd><a href="https://cwe.mitre.org/data/definitions/79.html" rel="noopener">CWE-79</a>, ASVS V3, A5</dd></dl></div></td></tr><tr class="t" id="row-T-2" data-open="0" data-n="2" data-target="F-5" data-cat="T" data-band="Medium" data-bandrank="2" data-status="open" data-owner="Backend lead" data-score="8" data-l="2" data-i="4"><td class="id">T-2</td><td><span class="id">F-5</span><span class="target-sub">Job dequeue</span></td><td><abbr class="cat" title="Tampering">T</abbr></td><td><button type="button" class="rowtoggle" aria-expanded="false" aria-controls="det-T-2">Forged job payload in the queue</button></td><td class="num">2×4 = <b>8</b></td><td><span class="chip chip-med"><i></i>Medium</span></td><td><span class="chip chip-open"><span aria-hidden="true">○</span>Open</span></td><td>Backend lead</td></tr><tr class="d" id="det-T-2" hidden><td colspan="8"><div class="detail"><p>A process with Redis access enqueues a job naming another tenant&#x27;s object; the worker acts on it.</p><dl><dt>Existing controls</dt><dd><span class="muted">none</span></dd><dt>Mitigation</dt><dd>Workers re-authorize every payload against the database at execution; Redis AUTH + network ACL</dd><dt>Plan</dt><dd>S03-B2</dd><dt>Effort</dt><dd>M</dd><dt>References</dt><dd><a href="https://cwe.mitre.org/data/definitions/345.html" rel="noopener">CWE-345</a></dd><dt>In plain terms</dt><dd>Anyone who can reach the job queue could make a background job act on another customer&#x27;s data. <i>Fix:</i> Password-protect the queue and have every job re-check its permissions before it runs.</dd></dl></div></td></tr><tr class="t" id="row-T-3" data-open="0" data-n="3" data-target="P-2" data-cat="D" data-band="Medium" data-bandrank="2" data-status="mitigated" data-owner="Backend lead" data-score="8" data-l="4" data-i="2"><td class="id">T-3</td><td><span class="id">P-2</span><span class="target-sub">API (FastAPI)</span></td><td><abbr class="cat" title="Denial of service">D</abbr></td><td><button type="button" class="rowtoggle" aria-expanded="false" aria-controls="det-T-3">Unbounded list endpoints</button></td><td class="num">4×2 = <b>8</b></td><td><span class="chip chip-med"><i></i>Medium</span></td><td><span class="chip chip-mitigated"><span aria-hidden="true">✓</span>Mitigated</span></td><td>Backend lead</td></tr><tr class="d" id="det-T-3" hidden><td colspan="8"><div class="detail"><p>A client requests a page size of one million rows and exhausts the API and database.</p><dl><dt>Existing controls</dt><dd><ul><li>00 §6 cursor pagination</li></ul></dd><dt>Mitigation</dt><dd>Hard cap on limit; statement timeout</dd><dt>References</dt><dd><a href="https://cwe.mitre.org/data/definitions/770.html" rel="noopener">CWE-770</a></dd></dl></div></td></tr></tbody></table></div></section><section class="sec" id="coverage" aria-labelledby="coverage-h"><h3 id="coverage-h"><span class="num">13</span>STRIDE coverage</h3><p class="lead">Evidence that every element was asked every applicable question. Coverage 9%: 42 required cells are unassessed.</p><div class="key"><span><b>n</b> threats recorded (click to list them)</span><span><span class="cov-nt">none</span> assessed, no threat (hover for the reason)</span><span><i class="cov-opt">opt</i> optional cell</span><span><span class="sw" style="background:var(--gap-bg)"></span>GAP: required, not assessed</span><span>— does not apply</span></div><div class="table-wrap"><table class="cov"><thead><tr><th>Element / flow</th><th title="Spoofing">S</th><th title="Tampering">T</th><th title="Repudiation">R</th><th title="Information disclosure">I</th><th title="Denial of service">D</th><th title="Elevation of privilege">E</th></tr></thead><tbody><tr class="sub"><td colspan="7">External entities</td></tr><tr><td><span class="id">E-1</span> Staff user (browser)</td><td class="cov-n"><a href="#register" data-q="E-1" title="Show these threats">1</a></td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr><td><span class="id">E-2</span> SMTP relay</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td><td><span class="cov-nt" title="Third-party relay; non-repudiation is handled by our outbound log, not by the relay.">none</span></td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr class="sub"><td colspan="7">Processes</td></tr><tr><td><span class="id">P-1</span> Ingress (TLS, WAF, rate limits)</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td></tr><tr><td><span class="id">P-2</span> API (FastAPI)</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-n"><a href="#register" data-q="P-2" title="Show these threats">1</a></td><td class="cov-gap" title="Required but not assessed">GAP</td></tr><tr><td><span class="id">P-3</span> Worker (Celery)</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td></tr><tr class="sub"><td colspan="7">Data stores</td></tr><tr><td><span class="id">D-1</span> PostgreSQL</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-opt" title="Optional: repudiation matters only for stores holding audit or log data">opt</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr><td><span class="id">D-2</span> Redis (tokens, queue)</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-opt" title="Optional: repudiation matters only for stores holding audit or log data">opt</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr class="sub"><td colspan="7">Data flows</td></tr><tr><td><span class="id">F-1</span> HTTPS requests</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr><td><span class="id">F-2</span> Proxied requests</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr><td><span class="id">F-3</span> SQL</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr><td><span class="id">F-4</span> Token and job writes</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr><td><span class="id">F-5</span> Job dequeue</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-n"><a href="#register" data-q="F-5" title="Show these threats">1</a></td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr><tr><td><span class="id">F-6</span> Transactional email</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-gap" title="Required but not assessed">GAP</td><td class="cov-na" title="Category does not apply to this element type">—</td></tr></tbody></table></div><p><b>Gaps to close:</b> E-1 × Repudiation; E-2 × Spoofing; P-1 × Spoofing; P-1 × Tampering; P-1 × Repudiation; P-1 × Information disclosure; P-1 × Denial of service; P-1 × Elevation of privilege; P-2 × Spoofing; P-2 × Tampering; P-2 × Repudiation; P-2 × Information disclosure; P-2 × Elevation of privilege; P-3 × Spoofing; P-3 × Tampering; P-3 × Repudiation; P-3 × Information disclosure; P-3 × Denial of service; P-3 × Elevation of privilege; D-1 × Tampering; D-1 × Information disclosure; D-1 × Denial of service; D-2 × Tampering; D-2 × Information disclosure; D-2 × Denial of service; F-1 × Tampering; F-1 × Information disclosure; F-1 × Denial of service; F-2 × Tampering; F-2 × Information disclosure; F-2 × Denial of service; F-3 × Tampering; F-3 × Information disclosure; F-3 × Denial of service; F-4 × Tampering; F-4 × Information disclosure; F-4 × Denial of service; F-5 × Information disclosure; F-5 × Denial of service; F-6 × Tampering; F-6 × Information disclosure; F-6 × Denial of service</p></section><section class="sec" id="heatmap" aria-labelledby="heatmap-h"><h3 id="heatmap-h"><span class="num">14</span>Risk heat map</h3><p class="lead">Number of threats at each likelihood × impact position. Click a cell to list its threats in the register.</p><div class="heat card"><table><tr><th class="corner">Impact ↓ &nbsp; Likelihood →</th><th>1<br><span class=muted>insider plus an unlikely chain</span></th><th>2<br><span class=muted>authenticated plus a misconfiguration</span></th><th>3<br><span class=muted>any authenticated user</span></th><th>4<br><span class=muted>unauthenticated, public tooling</span></th><th>5<br><span class=muted>trivial or automated</span></th></tr><tr><th class="y">5 <span class=muted>regulated breach, legal exposure</span></th><td class="l" data-l="1" data-i="5" data-n="0" title="no threats">·</td><td class="m" data-l="2" data-i="5" data-n="0" title="no threats">·</td><td class="h" data-l="3" data-i="5" data-n="0" title="no threats">·</td><td class="c" data-l="4" data-i="5" data-n="0" title="no threats">·</td><td class="c" data-l="5" data-i="5" data-n="0" title="no threats">·</td></tr><tr><th class="y">4 <span class=muted>all clients&#x27; data, audit or deliverables</span></th><td class="l" data-l="1" data-i="4" data-n="0" title="no threats">·</td><td class="m" data-l="2" data-i="4" data-n="1" title="T-2">1</td><td class="h" data-l="3" data-i="4" data-n="1" title="T-1">1</td><td class="h" data-l="4" data-i="4" data-n="0" title="no threats">·</td><td class="c" data-l="5" data-i="4" data-n="0" title="no threats">·</td></tr><tr><th class="y">3 <span class=muted>one client&#x27;s data, a day down</span></th><td class="l" data-l="1" data-i="3" data-n="0" title="no threats">·</td><td class="m" data-l="2" data-i="3" data-n="0" title="no threats">·</td><td class="m" data-l="3" data-i="3" data-n="0" title="no threats">·</td><td class="h" data-l="4" data-i="3" data-n="0" title="no threats">·</td><td class="h" data-l="5" data-i="3" data-n="0" title="no threats">·</td></tr><tr><th class="y">2 <span class=muted>one user&#x27;s data, hours down</span></th><td class="l" data-l="1" data-i="2" data-n="0" title="no threats">·</td><td class="l" data-l="2" data-i="2" data-n="0" title="no threats">·</td><td class="m" data-l="3" data-i="2" data-n="0" title="no threats">·</td><td class="m" data-l="4" data-i="2" data-n="1" title="T-3">1</td><td class="m" data-l="5" data-i="2" data-n="0" title="no threats">·</td></tr><tr><th class="y">1 <span class=muted>minor or transient</span></th><td class="l" data-l="1" data-i="1" data-n="0" title="no threats">·</td><td class="l" data-l="2" data-i="1" data-n="0" title="no threats">·</td><td class="l" data-l="3" data-i="1" data-n="0" title="no threats">·</td><td class="l" data-l="4" data-i="1" data-n="0" title="no threats">·</td><td class="l" data-l="5" data-i="1" data-n="0" title="no threats">·</td></tr></table><div class="key"><span><span class="chip chip-crit"><i></i>Critical</span></span><span><span class="chip chip-high"><i></i>High</span></span><span><span class="chip chip-med"><i></i>Medium</span></span><span><span class="chip chip-low"><i></i>Low</span></span></div></div></section><section class="sec" id="plan" aria-labelledby="plan-h"><h3 id="plan-h"><span class="num">15</span>Mitigation plan</h3><p class="lead">Every threat and the control that disposes of it, grouped by status and ordered by score. Open items carry the sprint or backlog reference.</p><div class="table-wrap"><table class=""><caption><span class="chip chip-open"><span aria-hidden="true">○</span>Open</span> &nbsp;1 — needs action: no adequate control yet</caption><thead><tr><th>ID</th><th>Severity</th><th>Threat</th><th>Action</th><th>Owner</th><th>Plan / approver</th><th>Effort</th></tr></thead><tbody><tr><td><a class="tl id" href="#T-2">T-2</a></td><td><span class="chip chip-med"><i></i>Medium <span class="sc">8</span></span></td><td>Forged job payload in the queue</td><td>Workers re-authorize every payload against the database at execution; Redis AUTH + network ACL</td><td>Backend lead</td><td>S03-B2</td><td>M</td></tr></tbody></table></div><div class="table-wrap"><table class=""><caption><span class="chip chip-mitigated"><span aria-hidden="true">✓</span>Mitigated</span> &nbsp;2 — a control is designed and in place</caption><thead><tr><th>ID</th><th>Severity</th><th>Threat</th><th>Action</th><th>Owner</th><th>Plan / approver</th><th>Effort</th></tr></thead><tbody><tr><td><a class="tl id" href="#T-1">T-1</a></td><td><span class="chip chip-high"><i></i>High <span class="sc">12</span></span></td><td>Session cookie theft via XSS</td><td>HttpOnly + SameSite cookies; CSP regression test in CI</td><td>Backend lead</td><td>—</td><td></td></tr><tr><td><a class="tl id" href="#T-3">T-3</a></td><td><span class="chip chip-med"><i></i>Medium <span class="sc">8</span></span></td><td>Unbounded list endpoints</td><td>Hard cap on limit; statement timeout</td><td>Backend lead</td><td>—</td><td></td></tr></tbody></table></div></section><section class="sec" id="divergences" aria-labelledby="divergences-h"><h3 id="divergences-h"><span class="num">16</span>Divergences found while modelling</h3><p class="lead">1 places where two sources disagree (document against document, or document against code). Each is a finding: an implementer has to pick one reading.</p><div class="table-wrap"><table class=""><thead><tr><th>ID</th><th>Between</th><th>Description</th><th>Resolution / owner</th><th>Threats</th></tr></thead><tbody><tr><td class="id">V-1</td><td>08 §7.1 vs 13 §3.1</td><td>08 says the CSP has no inline script; the shipped env default allows &#x27;unsafe-inline&#x27;.</td><td>Tighten the default; owner Backend lead</td><td><a class="tl id" href="#T-1">T-1</a></td></tr></tbody></table></div></section><section class="sec" id="method" aria-labelledby="method-h"><h3 id="method-h"><span class="num">17</span>Method and metadata</h3><p>STRIDE applied per element of the Level 1 data-flow diagram: external entities are asked about Spoofing and Repudiation; processes about all six categories; data stores about Tampering, Information disclosure and Denial of service (plus Repudiation when they hold audit data); flows about Tampering, Information disclosure and Denial of service. Risk = likelihood × impact on 1–5 scales; bands Critical 20–25, High 12–19, Medium 6–11, Low 1–5. A Critical or High threat may be accepted only with a named approver. Explicit no-threat decisions recorded: 1.</p><p>The diagrams, matrix, heat map and tables are generated from <code>model.yaml</code> by <code>threat-modeling-stride/scripts/build_report.py</code>; nothing is drawn or counted by hand. Companion files beside this page: <code>dfd-l0.svg</code>, <code>dfd-l1.svg</code>, <code>threat-model-summary.md</code>.</p></section><p class="foot">Generated from model.yaml by threat-modeling-stride/scripts/build_report.py · Acme Scheduler v0.1.0 · 2026-10-29</p></main></div><script>/* Threat-model report behaviour — inlined into threat-model.html by build_report.py. No dependencies. */
+(function () {
+  'use strict';
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* audience view: exec | tech | all */
+  function setView(v) {
+    document.body.setAttribute('data-view', v);
+    $$('.switch [data-view]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-view') === v)); });
+  }
+  $$('.switch [data-view]').forEach(function (b) { b.addEventListener('click', function () { setView(b.getAttribute('data-view')); }); });
+  var pr = $('#print'); if (pr) pr.addEventListener('click', function () { window.print(); });
+
+  /* contents: highlight the section in view */
+  var links = $$('.toc a[href^="#"]');
+  if ('IntersectionObserver' in window && links.length) {
+    var map = new Map();
+    links.forEach(function (a) { var el = document.getElementById(a.getAttribute('href').slice(1)); if (el) map.set(el, a); });
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { links.forEach(function (a) { a.classList.remove('active'); }); map.get(e.target).classList.add('active'); } });
+    }, { rootMargin: '-15% 0px -75% 0px' });
+    map.forEach(function (a, el) { io.observe(el); });
+  }
+
+  /* threat register: filters, expand/collapse, sort, deep links */
+  var reg = $('#reg');
+  if (reg) {
+    var rows = $$('tbody tr.t', reg), total = rows.length;
+    var f = { cat: $('#f-cat'), band: $('#f-band'), status: $('#f-status'), owner: $('#f-owner'), q: $('#f-q') };
+    var cell = null;
+    var det = function (r) { var n = r.nextElementSibling; return n && n.classList.contains('d') ? n : null; };
+    function apply() {
+      var n = 0, q = f.q && f.q.value.toLowerCase().trim();
+      rows.forEach(function (r) {
+        var d = r.dataset, x = det(r);
+        var text = (r.textContent + ' ' + (x ? x.textContent : '')).toLowerCase();
+        var ok = (!f.cat.value || d.cat === f.cat.value) && (!f.band.value || d.band === f.band.value) &&
+          (!f.status.value || d.status === f.status.value) && (!f.owner.value || d.owner === f.owner.value) &&
+          (!cell || (d.l === cell.l && d.i === cell.i)) && (!q || text.indexOf(q) > -1);
+        r.hidden = !ok; if (x) x.hidden = !ok || d.open !== '1'; if (ok) n++;
+      });
+      $('#reg-count').textContent = (n === total ? total : n + ' of ' + total) + ' threats';
+      var chip = $('#cell-chip');
+      if (chip) { chip.hidden = !cell; if (cell) $('#cell-chip-text').textContent = 'Likelihood ' + cell.l + ' × Impact ' + cell.i; }
+    }
+    function clear() { Object.keys(f).forEach(function (k) { if (f[k]) f[k].value = ''; }); cell = null; }
+    function setRow(r, open) {
+      r.dataset.open = open ? '1' : '0';
+      var x = det(r); if (x) x.hidden = !open || r.hidden;
+      var b = $('.rowtoggle', r); if (b) b.setAttribute('aria-expanded', String(open));
+    }
+    Object.keys(f).forEach(function (k) { var el = f[k]; if (el) el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', apply); });
+    var fc = $('#f-clear'); if (fc) fc.addEventListener('click', function () { clear(); apply(); });
+    var cx = $('#cell-chip-x'); if (cx) cx.addEventListener('click', function () { cell = null; apply(); });
+    rows.forEach(function (r) { var b = $('.rowtoggle', r); if (b) b.addEventListener('click', function () { setRow(r, r.dataset.open !== '1'); }); });
+    var ex = $('#reg-expand'); if (ex) ex.addEventListener('click', function () { rows.forEach(function (r) { setRow(r, true); }); });
+    var co = $('#reg-collapse'); if (co) co.addEventListener('click', function () { rows.forEach(function (r) { setRow(r, false); }); });
+    $$('th[data-sort]', reg).forEach(function (th) {
+      th.addEventListener('click', function () {
+        var key = th.dataset.sort, dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+        $$('th[data-sort]', reg).forEach(function (x) { x.dataset.dir = ''; x.removeAttribute('aria-sort'); });
+        th.dataset.dir = dir; th.setAttribute('aria-sort', dir === 'asc' ? 'ascending' : 'descending');
+        var tb = $('tbody', reg), pairs = rows.map(function (r) { return [r, det(r)]; });
+        pairs.sort(function (a, b) {
+          var x = a[0].dataset[key], y = b[0].dataset[key], nx = parseFloat(x), ny = parseFloat(y);
+          var c = (!isNaN(nx) && !isNaN(ny)) ? nx - ny : String(x).localeCompare(String(y), undefined, { numeric: true });
+          return dir === 'asc' ? c : -c;
+        });
+        pairs.forEach(function (p) { tb.appendChild(p[0]); if (p[1]) tb.appendChild(p[1]); });
+      });
+    });
+    $$('.heat td[data-l]').forEach(function (td) {
+      td.addEventListener('click', function () { if (td.dataset.n === '0') return; clear(); cell = { l: td.dataset.l, i: td.dataset.i }; apply(); location.hash = '#register'; });
+    });
+    $$('a[data-q]').forEach(function (a) { a.addEventListener('click', function () { clear(); f.q.value = a.dataset.q; apply(); }); });
+    function reveal() {
+      var id = decodeURIComponent(location.hash.slice(1)), r = id && document.getElementById('row-' + id);
+      if (!r) return;
+      clear(); apply(); setRow(r, true); r.scrollIntoView({ block: 'center', behavior: 'instant' });
+      r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash');
+    }
+    window.addEventListener('hashchange', reveal);
+    apply(); reveal();
+  }
+
+  /* data flows: cross-boundary filter */
+  var fx = $('#flows-cross');
+  if (fx) {
+    var fr = $$('#flows-table tbody tr');
+    var upd = function () { var n = 0; fr.forEach(function (r) { var ok = !fx.checked || r.dataset.cross === '1'; r.hidden = !ok; if (ok) n++; }); $('#flows-count').textContent = n + ' of ' + fr.length + ' flows'; };
+    fx.addEventListener('change', upd); upd();
+  }
+
+  /* diagrams: zoom, fit, full screen */
+  $$('.fig').forEach(function (fig) {
+    var svg = $('svg', fig), canvas = $('.fig-canvas', fig), zl = $('.fig-zoom', fig);
+    if (!svg || !canvas) return;
+    var vb = svg.viewBox && svg.viewBox.baseVal;
+    var base = (vb && vb.width) || (svg.width && svg.width.baseVal && svg.width.baseVal.value) || 1000, z = 1;
+    var set = function (nz) { z = Math.min(4, Math.max(0.25, nz)); svg.style.maxWidth = 'none'; svg.style.width = Math.round(base * z) + 'px'; if (zl) zl.textContent = Math.round(z * 100) + '%'; };
+    var fit = function () { svg.style.width = ''; svg.style.maxWidth = '100%'; z = Math.min(1, (canvas.clientWidth - 24) / base); if (zl) zl.textContent = 'fit'; };
+    var on = function (act, fn) { var b = $('[data-act="' + act + '"]', fig); if (b) b.addEventListener('click', fn); };
+    on('in', function () { set(z * 1.25); }); on('out', function () { set(z / 1.25); }); on('fit', fit);
+    on('full', function () { if (document.fullscreenElement) { document.exitFullscreen(); } else if (fig.requestFullscreen) { fig.requestFullscreen(); } });
+    fit();
+  });
+})();
+</script></body></html>
